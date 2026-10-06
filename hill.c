@@ -7,14 +7,12 @@ void main()
     char a[]="attack";
     int len=sizeof(a)-1;
     char e[len],num[len],d[len];
-
-    //calculating number equivalents
     for(i=0;i<len;i++)
     {
         num[i]=a[i]-'a';
     }
 
-    //encryption using matrix multiplication
+
     for(i=0;i<len;i=i+2)
     {
         e[i]=((num[i]*key[0][0])%26+(num[i+1]*key[1][0])%26)%26;
@@ -31,7 +29,6 @@ void main()
     printf("Original string=%s\n",a);
     printf("Encrypted string=%s\n",enc);
 
-    //calculating del of key
     int del=(key[0][0]*key[1][1])-(key[0][1]*key[1][0]);
     int del_inv;
 
@@ -44,12 +41,11 @@ void main()
         }
     }
 
-    //finding adjoint of key
     int k_adj[2][2]={{key[1][1],0-key[0][1]},{0-key[1][0],key[0][0]}};
 
     int k_inv[2][2];
 
-    //finding inverse of key
+
     for(i=0;i<2;i++)
     {
         for(j=0;j<2;j++)
@@ -58,7 +54,7 @@ void main()
         }
     }
 
-    //eliminating any negative numbers
+  
     for(i=0;i<2;i++)
     {
         for(j=0;j<2;j++)
@@ -70,7 +66,6 @@ void main()
         }
     }
 
-    //decryption using matrix multiplication
     for(i=0;i<len;i=i+2)
     {
         d[i]=((e[i]*k_inv[0][0])%26+(e[i+1]*k_inv[1][0])%26)%26;
