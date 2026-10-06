@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Lab</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+        }
+
+        .container {
+            width: min(900px, 92%);
+            margin: 60px auto;
+        }
+
+        .header {
+            margin-bottom: 28px;
+        }
+
+        .header h1 {
+            margin: 0 0 8px;
+            font-size: 32px;
+        }
+
+        .header p {
+            margin: 0;
+            color: #8b949e;
+        }
+
+        .directory {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .directory-title {
+            padding: 16px 20px;
+            border-bottom: 1px solid #30363d;
+            color: #8b949e;
+            font-family: monospace;
+        }
+
+        .file {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 17px 20px;
+            text-decoration: none;
+            color: #e6edf3;
+            border-bottom: 1px solid #21262d;
+            transition: background 0.15s;
+        }
+
+        .file:last-child {
+            border-bottom: none;
+        }
+
+        .file:hover {
+            background: #21262d;
+        }
+
+        .file-name {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: monospace;
+            font-size: 16px;
+        }
+
+        .icon {
+            color: #58a6ff;
+        }
+
+        .arrow {
+            color: #8b949e;
+        }
+
+        .viewer {
+            display: none;
+            margin-top: 24px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .viewer-title {
+            font-family: monospace;
+            color: #58a6ff;
+        }
+
+        .close {
+            border: 1px solid #30363d;
+            background: #21262d;
+            color: #e6edf3;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+
+        pre {
+            margin: 0;
+            padding: 20px;
+            overflow: auto;
+            max-height: 70vh;
+            font-size: 14px;
+            line-height: 1.6;
+            font-family: Consolas, "Courier New", monospace;
+            white-space: pre-wrap;
+        }
+
+        .error {
+            color: #ff7b72;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Crypto Lab</h1>
+        <p>Source files in this directory</p>
+    </div>
+
+    <div class="directory">
+        <div class="directory-title">~/lab</div>
+
+        <a class="file" href="?file=des.c">
+            <span class="file-name">
+                <span class="icon">📄</span> des.c
+            </span>
+            <span class="arrow">›</span>
+        </a>
+
+        <a class="file" href="?file=diffhell.c">
+            <span class="file-name">
+                <span class="icon">📄</span> diffhell.c
+            </span>
+            <span class="arrow">›</span>
+        </a>
+
+        <a class="file" href="?file=hill.c">
+            <span class="file-name">
+                <span class="icon">📄</span> hill.c
+            </span>
+            <span class="arrow">›</span>
+        </a>
+
+        <a class="file" href="?file=rsa.c">
+            <span class="file-name">
+                <span class="icon">📄</span> rsa.c
+            </span>
+            <span class="arrow">›</span>
+        </a>
+
+        <a class="file" href="?file=signdsa.c">
+            <span class="file-name">
+                <span class="icon">📄</span> signdsa.c
+            </span>
+            <span class="arrow">›</span>
+        </a>
+    </div>
+
+    <div class="viewer" id="viewer">
+        <div class="viewer-header">
+            <span class="viewer-title" id="viewerTitle"></span>
+            <button class="close" onclick="closeViewer()">Close</button>
+        </div>
+        <pre id="code">Loading...</pre>
+    </div>
+</div>
+
+<script>
+    const allowedFiles = [
+        "des.c",
+        "diffhell.c",
+        "hill.c",
+        "rsa.c",
+        "signdsa.c"
+    ];
+
+    async function openFile(filename) {
+        if (!allowedFiles.includes(filename)) return;
+
+        const viewer = document.getElementById("viewer");
+        const title = document.getElementById("viewerTitle");
+        const code = document.getElementById("code");
+
+        viewer.style.display = "block";
+        title.textContent = filename;
+        code.textContent = "Loading...";
+
+        try {
+            const response = await fetch(filename);
+
+            if (!response.ok) {
+                throw new Error("File not found");
+            }
+
+            code.textContent = await response.text();
+        } catch (error) {
+            code.innerHTML = '<span class="error">Unable to load ' + filename + '.</span>';
+        }
+
+        viewer.scrollIntoView({ behavior: "smooth" });
+    }
+
+    function closeViewer() {
+        document.getElementById("viewer").style.display = "none";
+        history.pushState({}, "", window.location.pathname);
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const file = params.get("file");
+
+    if (file && allowedFiles.includes(file)) {
+        openFile(file);
+    }
+</script>
+
+</body>
+</html>
