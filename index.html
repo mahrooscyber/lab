@@ -98,6 +98,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
             padding: 14px 18px;
             background: #161b22;
             border-bottom: 1px solid #30363d;
@@ -106,15 +107,37 @@
         .viewer-title {
             font-family: monospace;
             color: #58a6ff;
+            overflow-wrap: anywhere;
         }
 
-        .close {
+        .viewer-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .action-button {
             border: 1px solid #30363d;
             background: #21262d;
             color: #e6edf3;
             border-radius: 6px;
-            padding: 6px 12px;
+            padding: 7px 12px;
             cursor: pointer;
+            font-size: 13px;
+        }
+
+        .action-button:hover {
+            background: #30363d;
+        }
+
+        .copy-button {
+            border-color: #238636;
+            background: #238636;
+            color: white;
+        }
+
+        .copy-button:hover {
+            background: #2ea043;
         }
 
         pre {
@@ -126,16 +149,35 @@
             line-height: 1.6;
             font-family: Consolas, "Courier New", monospace;
             white-space: pre-wrap;
+            overflow-wrap: anywhere;
         }
 
         .error {
             color: #ff7b72;
             padding: 20px;
         }
+
+        @media (max-width: 520px) {
+            .container {
+                margin: 30px auto;
+            }
+
+            .viewer-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .viewer-actions {
+                width: 100%;
+            }
+
+            .action-button {
+                flex: 1;
+            }
+        }
     </style>
 </head>
 <body>
-
 <div class="container">
     <div class="header">
         <h1>Crypto Lab</h1>
@@ -145,38 +187,43 @@
     <div class="directory">
         <div class="directory-title">~/lab</div>
 
+        <a class="file" href="?file=blowfish.c">
+            <span class="file-name"><span class="icon">📄</span> blowfish.c</span>
+            <span class="arrow">›</span>
+        </a>
+
+        <a class="file" href="?file=blowfishhello.c">
+            <span class="file-name"><span class="icon">📄</span> blowfishhello.c</span>
+            <span class="arrow">›</span>
+        </a>
+
         <a class="file" href="?file=des.c">
-            <span class="file-name">
-                <span class="icon">📄</span> des.c
-            </span>
+            <span class="file-name"><span class="icon">📄</span> des.c</span>
             <span class="arrow">›</span>
         </a>
 
         <a class="file" href="?file=diffhell.c">
-            <span class="file-name">
-                <span class="icon">📄</span> diffhell.c
-            </span>
+            <span class="file-name"><span class="icon">📄</span> diffhell.c</span>
             <span class="arrow">›</span>
         </a>
 
-        <a class="file" href="?file=hill.c">
-            <span class="file-name">
-                <span class="icon">📄</span> hill.c
-            </span>
+        <a class="file" href="?file=hashfunction.c">
+            <span class="file-name"><span class="icon">📄</span> hashfunction.c</span>
+            <span class="arrow">›</span>
+        </a>
+
+        <a class="file" href="?file=rc4.c">
+            <span class="file-name"><span class="icon">📄</span> rc4.c</span>
             <span class="arrow">›</span>
         </a>
 
         <a class="file" href="?file=rsa.c">
-            <span class="file-name">
-                <span class="icon">📄</span> rsa.c
-            </span>
+            <span class="file-name"><span class="icon">📄</span> rsa.c</span>
             <span class="arrow">›</span>
         </a>
 
         <a class="file" href="?file=signdsa.c">
-            <span class="file-name">
-                <span class="icon">📄</span> signdsa.c
-            </span>
+            <span class="file-name"><span class="icon">📄</span> signdsa.c</span>
             <span class="arrow">›</span>
         </a>
     </div>
@@ -184,7 +231,10 @@
     <div class="viewer" id="viewer">
         <div class="viewer-header">
             <span class="viewer-title" id="viewerTitle"></span>
-            <button class="close" onclick="closeViewer()">Close</button>
+            <div class="viewer-actions">
+                <button class="action-button copy-button" id="copyButton" onclick="copyCode()" disabled>Copy Code</button>
+                <button class="action-button" onclick="closeViewer()">Close</button>
+            </div>
         </div>
         <pre id="code">Loading...</pre>
     </div>
@@ -192,12 +242,17 @@
 
 <script>
     const allowedFiles = [
+        "blowfish.c",
+        "blowfishhello.c",
         "des.c",
         "diffhell.c",
-        "hill.c",
+        "hashfunction.c",
+        "rc4.c",
         "rsa.c",
         "signdsa.c"
     ];
+
+    let currentCode = "";
 
     async function openFile(filename) {
         if (!allowedFiles.includes(filename)) return;
@@ -205,28 +260,56 @@
         const viewer = document.getElementById("viewer");
         const title = document.getElementById("viewerTitle");
         const code = document.getElementById("code");
+        const copyButton = document.getElementById("copyButton");
 
         viewer.style.display = "block";
         title.textContent = filename;
         code.textContent = "Loading...";
+        currentCode = "";
+        copyButton.disabled = true;
+        copyButton.textContent = "Copy Code";
 
         try {
             const response = await fetch(filename);
+            if (!response.ok) throw new Error("File not found");
 
-            if (!response.ok) {
-                throw new Error("File not found");
-            }
-
-            code.textContent = await response.text();
+            currentCode = await response.text();
+            code.textContent = currentCode;
+            copyButton.disabled = false;
         } catch (error) {
-            code.innerHTML = '<span class="error">Unable to load ' + filename + '.</span>';
+            code.textContent = "Unable to load " + filename + ". Make sure the file exists in the same directory as index.html.";
         }
 
         viewer.scrollIntoView({ behavior: "smooth" });
     }
 
+    async function copyCode() {
+        if (!currentCode) return;
+
+        const copyButton = document.getElementById("copyButton");
+
+        try {
+            await navigator.clipboard.writeText(currentCode);
+        } catch (error) {
+            const temporaryTextArea = document.createElement("textarea");
+            temporaryTextArea.value = currentCode;
+            temporaryTextArea.style.position = "fixed";
+            temporaryTextArea.style.opacity = "0";
+            document.body.appendChild(temporaryTextArea);
+            temporaryTextArea.select();
+            document.execCommand("copy");
+            temporaryTextArea.remove();
+        }
+
+        copyButton.textContent = "Copied!";
+        setTimeout(() => {
+            copyButton.textContent = "Copy Code";
+        }, 1500);
+    }
+
     function closeViewer() {
         document.getElementById("viewer").style.display = "none";
+        currentCode = "";
         history.pushState({}, "", window.location.pathname);
     }
 
@@ -237,6 +320,5 @@
         openFile(file);
     }
 </script>
-
 </body>
 </html>
